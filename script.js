@@ -1,7 +1,7 @@
 // ---------- 1. AUTOMATICALLY LOAD IMAGES ----------
 const sketches = [];
 
-// Load all images from the GitHub images folder
+// Load all images from the GitHub "images" folder
 async function loadSketches() {
   const host = window.location.hostname;
   const pathParts = window.location.pathname.split("/").filter(Boolean);
@@ -34,19 +34,22 @@ async function loadSketches() {
       .filter(
         file =>
           file.type === "file" &&
-          /\.(png|jpe?g|gif|webp|svg)$/i.test(file.name)
+          /\.(png|jpe?g|gif|webp|svg)$/i.test(file.name) &&
+          file.name.toLowerCase() !== "sketch4.svg"
       )
       .forEach(file => {
         sketches.push({
           file: file.name,
-          title: ""
+          title: file.name
+            .replace(/\.[^/.]+$/, "")
+            .replace(/[-_]/g, " ")
         });
       });
 
     buildGallery();
 
   } catch (error) {
-    console.error("Unable to load images:", error);
+    console.error("Error loading sketches:", error);
   }
 }
 
@@ -72,18 +75,15 @@ function buildGallery() {
 
     button.setAttribute(
       "aria-label",
-      "View sketch larger"
+      "View " + sketch.title + " larger"
     );
 
 
     const img = document.createElement("img");
 
     img.src = "images/" + sketch.file;
-
-    img.alt = "";
-
+    img.alt = sketch.title;
     img.loading = "lazy";
-
 
     button.appendChild(img);
 
@@ -93,15 +93,21 @@ function buildGallery() {
     });
 
 
-    figure.appendChild(button);
+    const caption = document.createElement("figcaption");
+
+    caption.textContent = sketch.title;
+
+
+    figure.append(button, caption);
 
     gallery.appendChild(figure);
-
   });
 
-  document
-    .querySelectorAll(".reveal")
-    .forEach(el => observer.observe(el));
+
+  // Start scroll animation
+  document.querySelectorAll(".reveal").forEach(el => {
+    observer.observe(el);
+  });
 }
 
 
@@ -115,8 +121,8 @@ const observer = new IntersectionObserver(
 
         entry.target.classList.add("visible");
 
+        // Animate only once
         observer.unobserve(entry.target);
-
       }
 
     });
@@ -128,72 +134,52 @@ const observer = new IntersectionObserver(
 );
 
 
-// ---------- 4. LARGER IMAGE VIEW ----------
+// ---------- 4. LIGHTBOX ----------
 const lightbox = document.getElementById("lightbox");
-
 const lbImg = document.getElementById("lb-img");
-
-const lbCaption =
-  document.getElementById("lb-caption");
+const lbCaption = document.getElementById("lb-caption");
 
 
 function openLightbox(sketch) {
 
   lbImg.src = "images/" + sketch.file;
 
-  lbImg.alt = "";
+  lbImg.alt = sketch.title;
 
-  lbCaption.textContent = "";
+  lbCaption.textContent = sketch.title;
 
   lightbox.hidden = false;
 
-  document
-    .getElementById("lb-close")
-    .focus();
+  document.getElementById("lb-close").focus();
 }
 
 
 function closeLightbox() {
-
   lightbox.hidden = true;
-
 }
 
 
 // Close button
-
 document
   .getElementById("lb-close")
-  .addEventListener(
-    "click",
-    closeLightbox
-  );
+  .addEventListener("click", closeLightbox);
 
 
 // Click outside image to close
-
 lightbox.addEventListener("click", e => {
 
   if (e.target === lightbox) {
-
     closeLightbox();
-
   }
 
 });
 
 
-// ESC key closes image
-
+// Press Escape to close
 document.addEventListener("keydown", e => {
 
-  if (
-    e.key === "Escape" &&
-    !lightbox.hidden
-  ) {
-
+  if (e.key === "Escape" && !lightbox.hidden) {
     closeLightbox();
-
   }
 
 });
