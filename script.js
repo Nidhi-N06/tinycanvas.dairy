@@ -1,73 +1,3 @@
-// ---------- 1. YOUR SKETCHES ----------
-// How to add a sketch:
-//   1. Copy the image file into the images/ folder.
-//   2. Add one line below with the file name and a title.
-// Sketches appear on the page in the same order as this list.
-const sketches = [
-  { file: "sketch1.svg", title: "Little flower" },
-  { file: "sketch2.svg", title: "Mountains" },
-  { file: "sketch3.svg", title: "Leaf study" },
-  { file: "sketch4.svg", title: "Happy face" },
-];
-
-// ---------- 2. Build the gallery: one sketch per row ----------
-const gallery = document.getElementById("gallery");
-
-sketches.forEach((sketch, i) => {
-  const figure = document.createElement("figure");
-  // reveal = starts hidden, animates in when scrolled into view
-  // from-left / from-right = alternate the direction it slides in from
-  figure.className = "sketch reveal " + (i % 2 === 0 ? "from-left" : "from-right");
-
-  const button = document.createElement("button");
-  button.className = "sketch-open";
-  button.setAttribute("aria-label", "View " + sketch.title + " larger");
-
-  const img = document.createElement("img");
-  img.src = "images/" + sketch.file;
-  img.alt = sketch.title;
-  img.loading = "lazy";
-  button.appendChild(img);
-  button.addEventListener("click", () => openLightbox(sketch));
-
-  const caption = document.createElement("figcaption");
-  caption.textContent = sketch.title;
-
-  figure.append(button, caption);
-  gallery.appendChild(figure);
-});
-
-// ---------- 3. Scroll animation ----------
-// IntersectionObserver tells us when an element enters the screen.
-// We then add the class "visible", and CSS does the animation.
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
-    if (entry.isIntersecting) {
-      entry.target.classList.add("visible");
-      observer.unobserve(entry.target);   // animate only once
-    }
-  });
-}, { threshold: 0.2 });
-
-document.querySelectorAll(".reveal").forEach(el => observer.observe(el));
-
-// ---------- 4. Larger view ----------
-const lightbox = document.getElementById("lightbox");
-const lbImg = document.getElementById("lb-img");
-const lbCaption = document.getElementById("lb-caption");
-
-function openLightbox(sketch) {
-  lbImg.src = "images/" + sketch.file;
-  lbImg.alt = sketch.title;
-  lbCaption.textContent = sketch.title;
-  lightbox.hidden = false;
-  document.getElementById("lb-close").focus();
-}
-function closeLightbox() { lightbox.hidden = true; }
-
-document.getElementById("lb-close").addEventListener("click", closeLightbox);
-lightbox.addEventListener("click", e => { if (e.target === lightbox) closeLightbox(); });
-document.addEventListener("keydown", e => { if (e.key === "Escape" && !lightbox.hidden) closeLightbox(); });
 // ---------- 1. AUTOMATICALLY LOAD IMAGES ----------
 const sketches = [];
 
@@ -108,4 +38,166 @@ async function loadSketches() {
       )
       .forEach(file => {
         sketches.push({
-          file
+          file: file.name,
+          title: ""
+        });
+      });
+
+    buildGallery();
+
+  } catch (error) {
+    console.error("Unable to load images:", error);
+  }
+}
+
+
+// ---------- 2. BUILD THE GALLERY ----------
+function buildGallery() {
+  const gallery = document.getElementById("gallery");
+
+  gallery.innerHTML = "";
+
+  sketches.forEach((sketch, i) => {
+
+    const figure = document.createElement("figure");
+
+    figure.className =
+      "sketch reveal " +
+      (i % 2 === 0 ? "from-left" : "from-right");
+
+
+    const button = document.createElement("button");
+
+    button.className = "sketch-open";
+
+    button.setAttribute(
+      "aria-label",
+      "View sketch larger"
+    );
+
+
+    const img = document.createElement("img");
+
+    img.src = "images/" + sketch.file;
+
+    img.alt = "";
+
+    img.loading = "lazy";
+
+
+    button.appendChild(img);
+
+
+    button.addEventListener("click", () => {
+      openLightbox(sketch);
+    });
+
+
+    figure.appendChild(button);
+
+    gallery.appendChild(figure);
+
+  });
+
+  document
+    .querySelectorAll(".reveal")
+    .forEach(el => observer.observe(el));
+}
+
+
+// ---------- 3. SCROLL ANIMATION ----------
+const observer = new IntersectionObserver(
+  entries => {
+
+    entries.forEach(entry => {
+
+      if (entry.isIntersecting) {
+
+        entry.target.classList.add("visible");
+
+        observer.unobserve(entry.target);
+
+      }
+
+    });
+
+  },
+  {
+    threshold: 0.2
+  }
+);
+
+
+// ---------- 4. LARGER IMAGE VIEW ----------
+const lightbox = document.getElementById("lightbox");
+
+const lbImg = document.getElementById("lb-img");
+
+const lbCaption =
+  document.getElementById("lb-caption");
+
+
+function openLightbox(sketch) {
+
+  lbImg.src = "images/" + sketch.file;
+
+  lbImg.alt = "";
+
+  lbCaption.textContent = "";
+
+  lightbox.hidden = false;
+
+  document
+    .getElementById("lb-close")
+    .focus();
+}
+
+
+function closeLightbox() {
+
+  lightbox.hidden = true;
+
+}
+
+
+// Close button
+
+document
+  .getElementById("lb-close")
+  .addEventListener(
+    "click",
+    closeLightbox
+  );
+
+
+// Click outside image to close
+
+lightbox.addEventListener("click", e => {
+
+  if (e.target === lightbox) {
+
+    closeLightbox();
+
+  }
+
+});
+
+
+// ESC key closes image
+
+document.addEventListener("keydown", e => {
+
+  if (
+    e.key === "Escape" &&
+    !lightbox.hidden
+  ) {
+
+    closeLightbox();
+
+  }
+
+});
+
+
+// ---------- 5. START ----------
+loadSketches();
