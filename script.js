@@ -68,3 +68,44 @@ function closeLightbox() { lightbox.hidden = true; }
 document.getElementById("lb-close").addEventListener("click", closeLightbox);
 lightbox.addEventListener("click", e => { if (e.target === lightbox) closeLightbox(); });
 document.addEventListener("keydown", e => { if (e.key === "Escape" && !lightbox.hidden) closeLightbox(); });
+// ---------- 1. AUTOMATICALLY LOAD IMAGES ----------
+const sketches = [];
+
+// Load all images from the GitHub images folder
+async function loadSketches() {
+  const host = window.location.hostname;
+  const pathParts = window.location.pathname.split("/").filter(Boolean);
+
+  let owner, repo;
+
+  // Detect GitHub Pages repository
+  if (host.endsWith(".github.io")) {
+    owner = host.replace(".github.io", "");
+    repo = pathParts[0] || "";
+  }
+
+  if (!owner || !repo) {
+    console.warn("Could not detect the GitHub repository.");
+    return;
+  }
+
+  try {
+    const response = await fetch(
+      `https://api.github.com/repos/${owner}/${repo}/contents/images`
+    );
+
+    if (!response.ok) {
+      throw new Error("Could not load images folder.");
+    }
+
+    const files = await response.json();
+
+    files
+      .filter(
+        file =>
+          file.type === "file" &&
+          /\.(png|jpe?g|gif|webp|svg)$/i.test(file.name)
+      )
+      .forEach(file => {
+        sketches.push({
+          file
